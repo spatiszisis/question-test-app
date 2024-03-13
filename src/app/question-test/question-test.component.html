@@ -1,0 +1,154 @@
+@defer(when questionTest() !== undefined) {
+<main class="min-h-screen flex items-center justify-center w-full bg-gray-900">
+  <div
+    class="bg-white shadow-md rounded-lg px-8 py-6 max-w-[90%] min-w-[90%] sm:max-w-[70%] sm:min-w-[70%] text-center"
+  >
+    <div class="flex flex-col justify-between gap-x-6">
+      <div class="flex items-center">
+        <a
+          [routerLink]="['/intro']"
+          (click)="onClearTest()"
+          class="cursor-pointer"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-6 h-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+            />
+          </svg>
+        </a>
+        <h2 class="font-bold tracking-tight text-gray-900 ml-4">
+          {{ questionTest().title }}
+        </h2>
+      </div>
+      <hr class="mt-5" />
+      @if (!finishedTest) {
+      <h1 class="my-10">{{ selectedQuestion.question }}</h1>
+
+      <div class="flex flex-col items-center">
+        @for(answer of selectedQuestion.answers; track selectedQuestion;) {
+        <span
+          (click)="onSelectAnswer(answer)"
+          [ngClass]="{
+            '!bg-green-200 !border-green-300 !text-slate-700':
+              checkAnswer &&
+              answer.isCorrect &&
+              (answerIncludedToSelectedAnswers(answer) ||
+                !answerIncludedToSelectedAnswers(answer)),
+            '!bg-red-400 !border-red-500':
+              checkAnswer &&
+              !answer.isCorrect &&
+              answerIncludedToSelectedAnswers(answer),
+            'bg-slate-300 border-slate-200':
+              answerIncludedToSelectedAnswers(answer)
+          }"
+          class="p-2 font-bold border-2 rounded-lg cursor-pointer mb-3 w-[50%]"
+        >
+          <div class="flex items-center justify-center relative">
+            <svg
+              *ngIf="
+                checkAnswer &&
+                answer.isCorrect &&
+                (answerIncludedToSelectedAnswers(answer) ||
+                  !answerIncludedToSelectedAnswers(answer))
+              "
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-7 h-7 absolute left-2 font-bold text-green-800"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="m4.5 12.75 6 6 9-13.5"
+              />
+            </svg>
+            <svg
+              *ngIf="
+                checkAnswer &&
+                !answer.isCorrect &&
+                answerIncludedToSelectedAnswers(answer)
+              "
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-7 h-7 absolute left-2 font-bold text-red-800"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18 18 6M6 6l12 12"
+              />
+            </svg>
+            <span>{{ answer.answer }}</span>
+          </div>
+        </span>
+        }
+      </div>
+      } @else {
+      <h1 class="my-10">
+        Your score is {{ score }} / {{ questionTest().questions.length }}
+      </h1>
+      }
+    </div>
+    <div class="mt-5 flex items-center justify-around flex-wrap">
+      @if (!finishedTest) {
+      <button
+        (click)="onCheckAnwser()"
+        class="bg-green-700 hover:bg-green-600 p-2 font-light text-white rounded-md"
+      >
+        Check answer
+      </button>
+      <span class="font-bold text-lg">{{
+        selectedQuestionIndex + 1 + "/" + questionTest().questions.length
+      }}</span>
+      <button
+        (click)="onNextQuestion()"
+        class="bg-slate-700 hover:bg-slate-600 p-2 font-light text-white rounded-md"
+      >
+        {{
+          questionTest().questions.length - 1 === selectedQuestionIndex
+            ? "Finish test"
+            : "Next question"
+        }}
+      </button>
+      } @else {
+      <button
+        (click)="onRestartTest()"
+        class="bg-slate-400 hover:bg-slate-500 p-2 font-light text-white rounded-md"
+      >
+        Restart test
+      </button>
+      <a
+        [routerLink]="['/intro']"
+        class="bg-slate-700 hover:bg-slate-600 p-2 font-light text-white rounded-md"
+      >
+        Go to intro
+      </a>
+      }
+    </div>
+  </div>
+</main>
+} @loading {
+<div class="h-screen bg-white">
+  <div class="flex justify-center items-center h-full">
+    <img
+      class="h-16 w-16"
+      src="https://icons8.com/preloaders/preloaders/1488/Iphone-spinner-2.gif"
+      alt=""
+    />
+  </div>
+</div>
+}
