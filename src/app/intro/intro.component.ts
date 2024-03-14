@@ -8,11 +8,12 @@ import {
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { QuestionTestsService } from '../core/services/question-tests.service';
+import { PopupComponent } from '../core/shared/popup/popup.component';
 
 @Component({
   selector: 'app-intro',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, PopupComponent],
   templateUrl: './intro.component.html',
   styleUrl: './intro.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

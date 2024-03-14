@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { QuestionTest } from '../models/question-test.model';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Firestore, collectionData } from '@angular/fire/firestore';
 import {
   CollectionReference,
   addDoc,
@@ -8,9 +9,8 @@ import {
   doc,
   setDoc,
 } from 'firebase/firestore';
-import { Firestore, collectionData } from '@angular/fire/firestore';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { Observable, from } from 'rxjs';
+import { QuestionTest } from '../models/question-test.model';
 
 @Injectable({
   providedIn: 'root',
@@ -31,7 +31,9 @@ export class QuestionTestsService {
     return from(addDoc(this.questionTestsCollection, { ...newQuestionTest }));
   }
 
-  changeQuestionTest(chQuestionTest: QuestionTest): Observable<any> {
+  changeQuestionTest(
+    chQuestionTest: QuestionTest
+  ): Observable<any> {
     const docRef = doc(this.questionTestsCollection, chQuestionTest.id);
     return from(setDoc(docRef, chQuestionTest));
   }

@@ -2,8 +2,10 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  OnInit,
   computed,
   inject,
+  signal,
 } from '@angular/core';
 import {
   FormArray,
@@ -13,12 +15,12 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Subscription, noop } from 'rxjs';
-import { AsyncButtonDirective } from '../core/async-button.directive';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subscription, delay, noop } from 'rxjs';
 import { QuestionTest } from '../core/models/question-test.model';
 import { QuestionTestsService } from '../core/services/question-tests.service';
 import { UploadFileComponent } from './upload-file/upload-file.component';
+import { PopupService } from '../core/services/popup.service';
 
 @Component({
   selector: 'app-add-or-edit-question-test',
@@ -28,22 +30,23 @@ import { UploadFileComponent } from './upload-file/upload-file.component';
     ReactiveFormsModule,
     FormsModule,
     UploadFileComponent,
-    AsyncButtonDirective,
     RouterLink,
   ],
   templateUrl: './add-or-edit-question-test.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AddQuestionTestComponent {
+export class AddQuestionTestComponent implements OnInit {
   formBuilder = inject(FormBuilder);
   questionTestsService = inject(QuestionTestsService);
   route = inject(ActivatedRoute);
+  router = inject(Router);
+  popupService = inject(PopupService);
 
   questionTestForm: FormGroup;
   closeAccordion = true;
   importedFiled: any;
   uploadedFiles: any[] = [];
-  submitSubscription: Subscription;
+  subscription: Subscription;
   existingQuestionTest: QuestionTest;
   questionTests = computed(() => {
     const questionTests = this.questionTestsService.questionTests();
@@ -59,6 +62,12 @@ export class AddQuestionTestComponent {
     });
     return questionTests;
   });
+  loadingUpdateOrAdd = signal(false);
+  loadingDelete = signal(false);
+
+  ngOnInit(): void {
+    this.questionTests();
+  }
 
   addQuestion() {
     const questionIndex = this.questionsArray().length;
@@ -87,27 +96,41 @@ export class AddQuestionTestComponent {
   }
 
   onSubmit() {
+    this.loadingUpdateOrAdd.set(true);
     if (!this.questionTestForm.valid && this.uploadedFiles.length === 0) {
+      return;
+    }
+
+    if (this.route.snapshot.params.id) {
+      this.subscription = this.questionTestsService
+        .changeQuestionTest({
+          id: this.route.snapshot.params.id,
+          ...this.questionTestForm.value,
+        })
+        .subscribe({
+          complete: () => this.onComplete(),
+          error: (err) => this.onError(err),
+        });
       return;
     }
 
     if (this.uploadedFiles.length > 0) {
       this.uploadedFiles.forEach((file) => {
-        this.submitSubscription = this.questionTestsService
+        this.subscription = this.questionTestsService
           .addQuestionTest(file)
           .subscribe({
-            next: () => {},
-            error: noop,
+            complete: () => this.onComplete(),
+            error: (err) => this.onError(err),
           });
       });
       return;
     }
 
-    this.submitSubscription = this.questionTestsService
+    this.subscription = this.questionTestsService
       .addQuestionTest(this.questionTestForm.value)
       .subscribe({
-        next: () => {},
-        error: noop,
+        complete: () => this.onComplete(),
+        error: (err) => this.onError(err),
       });
   }
 
@@ -123,6 +146,33 @@ export class AddQuestionTestComponent {
 
   onFilesUploaded(file: any) {
     this.uploadedFiles.push(file);
+  }
+
+  onDelete() {
+    this.loadingDelete.set(true);
+    this.subscription = this.questionTestsService
+      .removeQuestionTest(this.existingQuestionTest)
+      .subscribe({
+        complete: () => this.onComplete(true),
+        error: (err) => this.onError(err),
+      });
+  }
+
+  private onComplete(onDelete?: boolean) {
+    this.questionTestForm.reset();
+    this.loadingUpdateOrAdd.set(false);
+    this.loadingDelete.set(false);
+    this.popupService.setShownPopup(true);
+    this.popupService.setPopupContext(
+      onDelete
+        ? 'The question test has been deleted'
+        : 'The question test has been saved.'
+    );
+    this.router.navigate(['/intro']);
+  }
+
+  private onError(err: any) {
+    this.popupService.setPopupContext(err);
   }
 
   private getQuestionList(): FormGroup {
