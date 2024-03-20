@@ -21,6 +21,7 @@ import { QuestionTest } from '../core/models/question-test.model';
 import { QuestionTestsService } from '../core/services/question-tests.service';
 import { UploadFileComponent } from './upload-file/upload-file.component';
 import { PopupService } from '../core/services/popup.service';
+import { FluidHeightDirective } from '../core/fluidHeight.directive';
 
 @Component({
   selector: 'app-add-or-edit-question-test',
@@ -31,6 +32,7 @@ import { PopupService } from '../core/services/popup.service';
     FormsModule,
     UploadFileComponent,
     RouterLink,
+    FluidHeightDirective
   ],
   templateUrl: './add-or-edit-question-test.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

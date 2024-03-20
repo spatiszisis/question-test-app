@@ -1,6 +1,10 @@
 @defer (when route.snapshot.params.id ? questionTests() !== undefined : true) {
-<div class="h-screen flex flex-col justify-center px-6 py-12 lg:px-8">
-  <div class="sm:mx-auto sm:w-full sm:max-w-sm">
+<form
+  [formGroup]="questionTestForm"
+  (ngSubmit)="onSubmit()"
+  class="grid grid-cols-1 sm:grid-cols-12 grid-rows-12 gap-4 h-dvh bg-white px-6 py-24 sm:py-32 lg:px-8"
+>
+  <div class="col-span-1 sm:col-span-4 row-span-2 md:row-span-12">
     <div class="flex items-center">
       <a [routerLink]="['/intro']" class="cursor-pointer">
         <svg
@@ -29,247 +33,232 @@
       </h2>
     </div>
 
-    <div class="mt-10">
-      <ng-container *ngIf="!existingQuestionTest">
-        <app-upload-file
-          (filesUploaded)="onFilesUploaded($event)"
-        ></app-upload-file>
+    <div class="mt-5" *ngIf="!existingQuestionTest">
+      <app-upload-file
+        (filesUploaded)="onFilesUploaded($event)"
+      ></app-upload-file>
 
-        <p class="text-center text-lg my-5">or</p>
-      </ng-container>
+      <p class="text-center text-lg my-5">or</p>
+    </div>
 
-      <form
-        class="mt-5"
-        class="space-y-6"
-        [formGroup]="questionTestForm"
-        (ngSubmit)="onSubmit()"
+    <div class="mt-2">
+      <label
+        for="title"
+        class="block text-sm font-medium leading-6 text-gray-900"
+        >Group title</label
       >
-        <div>
-          <label
-            for="title"
-            class="block text-sm font-medium leading-6 text-gray-900"
-            >Group title</label
-          >
-          <div class="mt-2">
-            <input
-              id="title"
-              type="text"
-              formControlName="title"
-              autocomplete="off"
-              required
-              class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            />
-          </div>
-        </div>
+      <div class="mt-2">
+        <input
+          id="title"
+          type="text"
+          formControlName="title"
+          autocomplete="off"
+          required
+          class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+        />
+      </div>
+    </div>
 
-        <div class="flex items-center justify-between">
-          <h2>Questions</h2>
-          <button
-            (click)="addQuestion()"
-            type="button"
-            class="flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            Add question
-          </button>
-        </div>
-
-        <div
-          formArrayName="questions"
-          class="overflow-y-auto max-h-[800px] p-4"
+    <div class="flex flex-col mt-5">
+      <button
+        type="submit"
+        class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      >
+        @if (loadingUpdateOrAdd()) {
+        <span>
+          <span
+            class="spinner-border spinner-border-sm"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          Loading...
+        </span>
+        } @else {
+        <span>
+          {{ route.snapshot.params.id ? "Edit" : "Submit" }}
+        </span>
+        }
+      </button>
+      <ng-container *ngIf="route.snapshot.params.id">
+        <hr class="my-2" />
+        <button
+          type="button"
+          (click)="onDelete()"
+          class="flex w-full justify-center rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
         >
-          <div
-            *ngFor="
-              let control of questionsArray().controls;
-              let questionIndex = index
-            "
-          >
-            <div [formGroupName]="questionIndex">
-              <div
-                class="grid divide-y divide-neutral-200 max-w-xl mx-auto mt-2"
-              >
-                <div class="py-5">
-                  <details class="group" [id]="'question' + questionIndex">
-                    <summary
-                      class="flex justify-between items-center font-medium cursor-pointer list-none"
+          @if (loadingDelete()) {
+          <span>
+            <span
+              class="spinner-border spinner-border-sm"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            Loading...
+          </span>
+          } @else {
+          <span> Delete </span>
+          }
+        </button>
+      </ng-container>
+    </div>
+  </div>
+  <div class="col-span-1 sm:col-span-8 row-span-10 md:row-span-12 flex flex-col mt-20 sm:mt-0">
+    <div class="flex items-center justify-around">
+      <p class="text-lg leading-3 font-bold">Questions</p>
+      <button
+        (click)="addQuestion()"
+        type="button"
+        class="flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      >
+        Add question
+      </button>
+    </div>
+
+    <div formArrayName="questions" class="overflow-y-auto p-4 space-y-6">
+      <div
+        *ngFor="
+          let control of questionsArray().controls;
+          let questionIndex = index
+        "
+      >
+        <div [formGroupName]="questionIndex">
+          <div class="grid divide-y divide-neutral-200 max-w-xl mx-auto mt-2">
+            <div class="py-5">
+              <details class="group" [id]="'question' + questionIndex">
+                <summary
+                  class="flex justify-between items-center font-medium cursor-pointer list-none"
+                >
+                  <span>Question {{ questionIndex + 1 }}</span>
+                  <span class="transition group-open:rotate-180">
+                    <svg
+                      fill="none"
+                      height="24"
+                      shape-rendering="geometricPrecision"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                      width="24"
                     >
-                      <span>Question {{ questionIndex + 1 }}</span>
-                      <span class="transition group-open:rotate-180">
-                        <svg
-                          fill="none"
-                          height="24"
-                          shape-rendering="geometricPrecision"
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="1.5"
-                          viewBox="0 0 24 24"
-                          width="24"
-                        >
-                          <path d="M6 9l6 6 6-6"></path>
-                        </svg>
-                      </span>
-                    </summary>
-                    <div class="mt-2 flex flex-col">
-                      <div class="flex items-center justify-between">
-                        <label
-                          [for]="'question' + questionIndex"
-                          class="block text-sm font-medium leading-6 text-gray-900"
-                          >Question Title</label
-                        >
-                        <button
-                          (click)="removeQuestion(questionIndex)"
-                          type="button"
-                          class="text-sm font-semibold leading-6 text-red-600"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                      <textarea
-                        [id]="'question' + questionIndex"
-                        type="text"
-                        formControlName="question"
-                        autocomplete="off"
-                        required
-                        class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                      ></textarea>
-                    </div>
+                      <path d="M6 9l6 6 6-6"></path>
+                    </svg>
+                  </span>
+                </summary>
+                <div class="mt-2 flex flex-col">
+                  <div class="flex items-center justify-between">
+                    <label
+                      [for]="'question' + questionIndex"
+                      class="block text-sm font-medium leading-6 text-gray-900"
+                      >Question Title</label
+                    >
+                    <button
+                      (click)="removeQuestion(questionIndex)"
+                      type="button"
+                      class="text-sm font-semibold leading-6 text-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  <textarea
+                    [id]="'question' + questionIndex"
+                    type="text"
+                    formControlName="question"
+                    autocomplete="off"
+                    required
+                    class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  ></textarea>
+                </div>
 
-                    <div class="flex items-center justify-between mt-5">
-                      <h2>Answers</h2>
-                      <button
-                        type="button"
-                        (click)="addAnswer(questionIndex)"
-                        class="flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                      >
-                        Add answer
-                      </button>
-                    </div>
+                <div class="flex items-center justify-between mt-5">
+                  <h2>Answers</h2>
+                  <button
+                    type="button"
+                    (click)="addAnswer(questionIndex)"
+                    class="flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  >
+                    Add answer
+                  </button>
+                </div>
 
-                    <div formArrayName="answers">
-                      <div
-                        *ngFor="
-                          let control of answersArray(questionIndex).controls;
-                          let answerIndex = index
-                        "
-                      >
-                        <div [formGroupName]="answerIndex">
-                          <div class="mt-2 flex flex-col gap-1">
-                            <div class="flex flex-col">
-                              <div class="flex items-center justify-between">
-                                <label
-                                  [for]="'answer' + answerIndex"
-                                  class="block text-sm font-medium leading-6 text-gray-900"
-                                  >Answer Title</label
-                                >
-                                <button
-                                  (click)="
-                                    removeAnswer(questionIndex, answerIndex)
-                                  "
-                                  type="button"
-                                  class="text-sm font-semibold leading-6 text-red-600"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                              <input
-                                [id]="'answer' + answerIndex"
-                                type="text"
-                                formControlName="answer"
-                                autocomplete="off"
-                                required
-                                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                              />
-                            </div>
-                            <div class="flex flex-col">
-                              <label
-                                class="block text-sm font-medium leading-6 text-gray-900"
-                                [for]="'isCorrect' + answerIndex"
-                                data-ripple-dark="true"
-                              >
-                                Is correct?
-                              </label>
-                              <input
-                                type="checkbox"
-                                formControlName="isCorrect"
-                                class="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-500 checked:bg-blue-500 checked:before:bg-blue-500 hover:before:opacity-10"
-                                [id]="'isCorrect' + answerIndex"
-                              />
-                              <div
-                                class="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-white opacity-0 transition-opacity peer-checked:opacity-100"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  class="h-3.5 w-3.5"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                  stroke="currentColor"
-                                  stroke-width="1"
-                                >
-                                  <path
-                                    fill-rule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clip-rule="evenodd"
-                                  ></path>
-                                </svg>
-                              </div>
-                            </div>
+                <div formArrayName="answers">
+                  <div
+                    *ngFor="
+                      let control of answersArray(questionIndex).controls;
+                      let answerIndex = index
+                    "
+                  >
+                    <div [formGroupName]="answerIndex">
+                      <div class="mt-2 flex flex-col gap-1">
+                        <div class="flex flex-col">
+                          <div class="flex items-center justify-between">
+                            <label
+                              [for]="'answer' + answerIndex"
+                              class="block text-sm font-medium leading-6 text-gray-900"
+                              >Answer Title</label
+                            >
+                            <button
+                              (click)="removeAnswer(questionIndex, answerIndex)"
+                              type="button"
+                              class="text-sm font-semibold leading-6 text-red-600"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                          <input
+                            [id]="'answer' + answerIndex"
+                            type="text"
+                            formControlName="answer"
+                            autocomplete="off"
+                            required
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                          />
+                        </div>
+                        <div class="flex flex-col">
+                          <label
+                            class="block text-sm font-medium leading-6 text-gray-900"
+                            [for]="'isCorrect' + answerIndex"
+                            data-ripple-dark="true"
+                          >
+                            Is correct?
+                          </label>
+                          <input
+                            type="checkbox"
+                            formControlName="isCorrect"
+                            class="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-blue-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-blue-500 checked:bg-blue-500 checked:before:bg-blue-500 hover:before:opacity-10"
+                            [id]="'isCorrect' + answerIndex"
+                          />
+                          <div
+                            class="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-white opacity-0 transition-opacity peer-checked:opacity-100"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              class="h-3.5 w-3.5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              stroke="currentColor"
+                              stroke-width="1"
+                            >
+                              <path
+                                fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd"
+                              ></path>
+                            </svg>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </details>
+                  </div>
                 </div>
-              </div>
+              </details>
             </div>
           </div>
         </div>
-
-        <div class="flex flex-col">
-          <button
-            type="submit"
-            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            @if (loadingUpdateOrAdd()) {
-            <span>
-              <span
-                class="spinner-border spinner-border-sm"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              Loading...
-            </span>
-            } @else {
-            <span>
-              {{ route.snapshot.params.id ? "Edit" : "Submit" }}
-            </span>
-            }
-          </button>
-          <ng-container *ngIf="route.snapshot.params.id">
-            <hr class="my-2" />
-            <button
-              type="button"
-              (click)="onDelete()"
-              class="flex w-full justify-center rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
-            >
-              @if (loadingDelete()) {
-              <span>
-                <span
-                  class="spinner-border spinner-border-sm"
-                  role="status"
-                  aria-hidden="true"
-                ></span>
-                Loading...
-              </span>
-              } @else {
-              <span> Delete </span>
-              }
-            </button>
-          </ng-container>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
-</div>
+</form>
 } @loading {
 <div class="h-screen bg-white">
   <div class="flex justify-center items-center h-full">
