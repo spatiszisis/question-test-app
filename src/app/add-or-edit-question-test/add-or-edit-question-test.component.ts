@@ -16,12 +16,11 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subscription, delay, noop } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { QuestionTest } from '../core/models/question-test.model';
+import { PopupService } from '../core/services/popup.service';
 import { QuestionTestsService } from '../core/services/question-tests.service';
 import { UploadFileComponent } from './upload-file/upload-file.component';
-import { PopupService } from '../core/services/popup.service';
-import { FluidHeightDirective } from '../core/fluidHeight.directive';
 
 @Component({
   selector: 'app-add-or-edit-question-test',
@@ -32,7 +31,6 @@ import { FluidHeightDirective } from '../core/fluidHeight.directive';
     FormsModule,
     UploadFileComponent,
     RouterLink,
-    FluidHeightDirective
   ],
   templateUrl: './add-or-edit-question-test.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,6 +67,7 @@ export class AddQuestionTestComponent implements OnInit {
 
   ngOnInit(): void {
     this.questionTests();
+    this.scrollToBottom();
   }
 
   addQuestion() {
@@ -83,6 +82,7 @@ export class AddQuestionTestComponent implements OnInit {
           .getElementById(`question${questionIndex - 1}`)
           .removeAttribute('open');
     }, 10);
+    this.scrollToBottom();
   }
 
   removeQuestion(questionIndex: number) {
@@ -211,5 +211,12 @@ export class AddQuestionTestComponent implements OnInit {
       );
     });
     return formArray;
+  }
+
+  private scrollToBottom() {
+    setTimeout(() => {
+      const wordsHeight = document.getElementById('questionsList');
+      wordsHeight.scrollTop = wordsHeight.scrollHeight;
+    }, 50);
   }
 }
