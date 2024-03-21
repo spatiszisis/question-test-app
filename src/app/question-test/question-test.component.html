@@ -1,7 +1,8 @@
 @defer(when questionTest() !== undefined) {
 <main class="min-h-screen flex items-center justify-center w-full bg-gray-900">
   <div
-    class="bg-white shadow-md rounded-lg px-8 py-6 max-w-[90%] min-w-[90%] sm:max-w-[70%] sm:min-w-[70%] text-center"
+    [ngClass]="{ 'md:max-h-[700px]': finishedTest, 'overflow-y-scroll': showWrongQuestions && finishedTest }"
+    class="bg-white shadow-md rounded-lg px-8 py-6 max-w-[90vw] max-h-[100vw] sm:max-h-max md:max-w-[700px] text-center"
   >
     <div class="flex flex-col justify-between gap-x-6">
       <div class="flex items-center">
@@ -50,7 +51,7 @@
             'bg-slate-300 border-slate-200':
               answerIncludedToSelectedAnswers(answer)
           }"
-          class="p-2 font-bold border-2 rounded-lg cursor-pointer mb-3 w-[50%]"
+          class="p-2 font-bold border-2 rounded-lg cursor-pointer mb-3 w-full"
         >
           <div class="flex items-center justify-center relative">
             <svg
@@ -101,9 +102,65 @@
       <h1 class="my-10">
         Your score is {{ score }} / {{ questionTest().questions.length }}
       </h1>
+
+      <a
+        class="text-gray-900 my-2 hover:underline cursor-pointer"
+        (click)="showWrongQuestions = !showWrongQuestions"
+        >{{ showWrongQuestions ? "Hidden" : "Show" }} wrong answers</a
+      >
+
+      <div *ngIf="showWrongQuestions" class="py-5">
+        <ng-container
+          *ngFor="
+            let wrongQuestion of wrongQuestions;
+            let wrongQuestionIndex = index
+          "
+        >
+          <details
+            class="group text-left mb-4"
+            [id]="'wrongQuestion' + wrongQuestionIndex"
+          >
+            <summary
+              class="flex justify-between items-center font-medium cursor-pointer list-none"
+            >
+              <span class="mr-4">Question: {{ wrongQuestion.question }}</span>
+              <span class="transition group-open:rotate-180">
+                <svg
+                  fill="none"
+                  height="24"
+                  shape-rendering="geometricPrecision"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  viewBox="0 0 24 24"
+                  width="24"
+                >
+                  <path d="M6 9l6 6 6-6"></path>
+                </svg>
+              </span>
+            </summary>
+            <div class="mt-2 flex flex-col">
+              <ng-container *ngFor="let wrongQuestion of wrongQuestion.answers">
+                <span
+                  [ngClass]="{
+                    '!text-green-300': wrongQuestion.isCorrect,
+                    '!text-red-400': !wrongQuestion.isCorrect
+                  }"
+                  class="font-bold mb-3"
+                >
+                  {{ wrongQuestion.answer }}
+                </span>
+              </ng-container>
+            </div>
+          </details>
+        </ng-container>
+      </div>
       }
     </div>
-    <div class="mt-5 flex items-center justify-around flex-wrap">
+    <div
+      class="mt-5 flex flex-col sm:flex-row gap-2 sm:gap-0 items-center justify-around flex-wrap"
+    >
       @if (!finishedTest) {
       <button
         (click)="onCheckAnwser()"

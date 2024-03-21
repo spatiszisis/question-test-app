@@ -31,6 +31,8 @@ export class QuestionTestComponent {
   selectedQuestion: Question;
   finishedTest = false;
   score = 0;
+  wrongQuestions: Question[] = [];
+  showWrongQuestions = false;
   questionTest = computed(() => {
     const selectedQuestionTest = this.questionTestService.getQuestionTest(
       this.route.snapshot.params.id
@@ -40,6 +42,7 @@ export class QuestionTestComponent {
       this.score = !!sessionStorage.getItem('score')
         ? parseInt(sessionStorage.getItem('score'))
         : 0;
+      this.wrongQuestions = !!sessionStorage.getItem('wrongQuestions') ? JSON.parse(sessionStorage.getItem('wrongQuestions')) : [];
       const questionIndexFromLocalStorage =
         this.getSelectedQuestionIndexFromLocalStorage();
       this.selectedQuestionIndex = !!questionIndexFromLocalStorage
@@ -101,6 +104,7 @@ export class QuestionTestComponent {
     this.setSelectedQuestionIndexTolocalStorage();
     sessionStorage.removeItem('score');
     sessionStorage.removeItem('selectedQuestionIndex');
+    sessionStorage.removeItem('wrongQuestions');
   }
 
   answerIncludedToSelectedAnswers(answer: Answer): boolean {
@@ -139,6 +143,9 @@ export class QuestionTestComponent {
     if (correctSelectedAnswers.length === correctAnswers.length) {
       this.score++;
       sessionStorage.setItem('score', JSON.stringify(this.score));
+    } else {
+      this.wrongQuestions.push(previousQuestion);
+      sessionStorage.setItem('wrongQuestions', JSON.stringify(this.wrongQuestions));
     }
   }
 
