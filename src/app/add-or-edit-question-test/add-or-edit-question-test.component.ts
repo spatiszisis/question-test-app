@@ -48,27 +48,33 @@ export class AddQuestionTestComponent implements OnInit {
   uploadedFiles: any[] = [];
   subscription: Subscription;
   existingQuestionTest: QuestionTest;
-  questionTests = computed(() => {
-    const questionTests = this.questionTestsService.questionTests();
-    this.existingQuestionTest = this.questionTestsService.getQuestionTest(
-      this.route.snapshot.params.id
-    );
-
-    this.questionTestForm = this.formBuilder.group({
-      title: [this.existingQuestionTest ? this.existingQuestionTest.title : ''],
-      questions: this.existingQuestionTest
-        ? this.setExistingQuestionTest()
-        : new FormArray([]),
-    });
-    return questionTests;
-  });
   loadingUpdateOrAdd = signal(false);
   loadingDelete = signal(false);
+  loading = signal(true);
 
-  ngOnInit(): void {
-    this.questionTests();
-    this.scrollToBottom();
+  constructor() {
+    this.questionTestsService.questionTests.subscribe((data: any) => {
+      this.existingQuestionTest = data.find(
+        (qt) => qt.id === this.route.snapshot.params.id
+      );
+
+      this.questionTestForm = this.formBuilder.group({
+        title: [
+          this.existingQuestionTest ? this.existingQuestionTest.title : '',
+        ],
+        questions: this.existingQuestionTest
+          ? this.setExistingQuestionTest()
+          : new FormArray([]),
+      });
+
+      if (this.existingQuestionTest) {
+        this.scrollToBottom();
+      }
+      this.loading.set(false);
+    });
   }
+
+  ngOnInit(): void {}
 
   addQuestion() {
     const questionIndex = this.questionsArray().length;
@@ -216,7 +222,9 @@ export class AddQuestionTestComponent implements OnInit {
   private scrollToBottom() {
     setTimeout(() => {
       const wordsHeight = document.getElementById('questionsList');
-      wordsHeight.scrollTop = wordsHeight.scrollHeight;
+      if (wordsHeight != null) {
+        wordsHeight.scrollTop = wordsHeight.scrollHeight;
+      }
     }, 50);
   }
 }

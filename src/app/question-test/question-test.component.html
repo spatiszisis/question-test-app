@@ -1,16 +1,15 @@
-@defer(when questionTest() !== undefined) {
+@defer(when !stopLoading()) {
 <main class="min-h-screen flex items-center justify-center w-full bg-gray-900">
   <div
-    [ngClass]="{ 'md:max-h-[700px]': finishedTest, 'overflow-y-scroll': showWrongQuestions && finishedTest }"
-    class="bg-white shadow-md rounded-lg px-8 py-6 max-w-[90vw] max-h-[100vw] sm:max-h-max md:max-w-[700px] text-center"
+    [ngClass]="{
+      'md:max-h-[700px]': finishedTest,
+      'overflow-y-scroll': showWrongQuestions && finishedTest
+    }"
+    class="bg-white shadow-md rounded-lg px-8 py-6 max-w-[90vw] max-h-[100vw] sm:max-h-max md:max-w-[700px] md:min-w-[700px] text-center"
   >
     <div class="flex flex-col justify-between gap-x-6">
       <div class="flex items-center">
-        <a
-          [routerLink]="['/intro']"
-          (click)="onClearTest()"
-          class="cursor-pointer"
-        >
+        <a (click)="onGoToIntro()" class="cursor-pointer">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -27,7 +26,7 @@
           </svg>
         </a>
         <h2 class="font-bold tracking-tight text-gray-900 ml-4">
-          {{ questionTest().title }}
+          {{ selectedQuestionTest.title }}
         </h2>
       </div>
       <hr class="mt-5" />
@@ -36,7 +35,7 @@
 
       <div class="flex flex-col items-center">
         @for(answer of selectedQuestion.answers; track selectedQuestion;) {
-        <span
+        <button
           (click)="onSelectAnswer(answer)"
           [ngClass]="{
             '!bg-green-200 !border-green-300 !text-slate-700':
@@ -49,8 +48,10 @@
               !answer.isCorrect &&
               answerIncludedToSelectedAnswers(answer),
             'bg-slate-300 border-slate-200':
-              answerIncludedToSelectedAnswers(answer)
+              answerIncludedToSelectedAnswers(answer),
+            'cursor-not-allowed': checkAnswer
           }"
+          [disabled]="checkAnswer"
           class="p-2 font-bold border-2 rounded-lg cursor-pointer mb-3 w-full"
         >
           <div class="flex items-center justify-center relative">
@@ -95,14 +96,17 @@
             </svg>
             <span>{{ answer.answer }}</span>
           </div>
-        </span>
+        </button>
         }
       </div>
       } @else {
       <h1 class="my-10">
-        Your score is {{ score }} / {{ questionTest().questions.length }}
+        <span *ngIf="score === selectedQuestionTest.questions.length">
+          Congrats you answer corret all the questions!
+        </span>
+        <span>Your score is {{ score }} / {{ selectedQuestionTest.questions.length }}</span>
       </h1>
-
+      @if (wrongQuestions.length > 0) {
       <a
         class="text-gray-900 my-2 hover:underline cursor-pointer"
         (click)="showWrongQuestions = !showWrongQuestions"
@@ -156,27 +160,27 @@
           </details>
         </ng-container>
       </div>
-      }
+      } }
     </div>
     <div
       class="mt-5 flex flex-col sm:flex-row gap-2 sm:gap-0 items-center justify-around flex-wrap"
     >
       @if (!finishedTest) {
       <button
-        (click)="onCheckAnwser()"
+        (click)="checkAnswer = true"
         class="bg-green-700 hover:bg-green-600 p-2 font-light text-white rounded-md"
       >
         Check answer
       </button>
       <span class="font-bold text-lg">{{
-        selectedQuestionIndex + 1 + "/" + questionTest().questions.length
+        selectedQuestionIndex + 1 + "/" + selectedQuestionTest.questions.length
       }}</span>
       <button
         (click)="onNextQuestion()"
         class="bg-slate-700 hover:bg-slate-600 p-2 font-light text-white rounded-md"
       >
         {{
-          questionTest().questions.length - 1 === selectedQuestionIndex
+          selectedQuestionTest.questions.length - 1 === selectedQuestionIndex
             ? "Finish test"
             : "Next question"
         }}
@@ -188,8 +192,15 @@
       >
         Restart test
       </button>
+      <button
+        *ngIf="wrongQuestions.length > 0"
+        (click)="onRestartWrongQuestions()"
+        class="bg-slate-400 hover:bg-slate-500 p-2 font-light text-white rounded-md mx-4"
+      >
+        Restart wrong questions only
+      </button>
       <a
-        [routerLink]="['/intro']"
+        (click)="onGoToIntro()"
         class="bg-slate-700 hover:bg-slate-600 p-2 font-light text-white rounded-md"
       >
         Go to intro

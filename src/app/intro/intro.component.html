@@ -24,23 +24,26 @@
       >
         <option [value]="undefined">Choose a test</option>
         <option
-          *ngFor="let questionTest of questionTests()"
+          *ngFor="let questionTest of questionTestService.questionTests | async"
           [value]="questionTest.id"
         >
           {{ questionTest.title }}
         </option>
       </select>
-      <button
-        type="button"
-        (click)="startTest()"
+      <a
+        *ngIf="selectedQuestionTestId"
+        [routerLink]="['/question-test', selectedQuestionTestId]"
         class="rounded-xl mt-5 bg-indigo-600 px-3.5 py-2.5 text-lg font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
       >
         Start a test
-      </button>
+      </a>
       <hr class="my-5" />
-      <button
-        type="button"
-        (click)="createOrEditQuestionTest()"
+      <a
+        [routerLink]="
+          selectedQuestionTestId
+            ? ['/edit-question-test', selectedQuestionTestId]
+            : ['/add-question-test']
+        "
         class="rounded-xl bg-indigo-600 px-3.5 py-2.5 text-lg font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
       >
         {{
@@ -48,7 +51,7 @@
             ? "Edit the question test"
             : "Create your own question test"
         }}
-      </button>
+      </a>
     </div>
   </div>
 

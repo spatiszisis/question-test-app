@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Firestore, collectionData } from '@angular/fire/firestore';
 import {
   CollectionReference,
@@ -9,7 +9,7 @@ import {
   doc,
   setDoc,
 } from 'firebase/firestore';
-import { Observable, from } from 'rxjs';
+import { Observable, filter, find, from } from 'rxjs';
 import { QuestionTest } from '../models/question-test.model';
 
 @Injectable({
@@ -22,10 +22,9 @@ export class QuestionTestsService {
     'question-tests'
   ) as CollectionReference<QuestionTest>;
 
-  questionTests$ = collectionData(this.questionTestsCollection, {
+  questionTests = collectionData(this.questionTestsCollection, {
     idField: 'id',
   });
-  questionTests = toSignal(this.questionTests$, { initialValue: [] });
 
   addQuestionTest(newQuestionTest: QuestionTest): Observable<any> {
     return from(addDoc(this.questionTestsCollection, { ...newQuestionTest }));
@@ -43,7 +42,9 @@ export class QuestionTestsService {
     return from(deleteDoc(ref));
   }
 
-  getQuestionTest(id: string): QuestionTest {
-    return this.questionTests().find((qt) => qt.id === id);
+  getQuestionTest(id: string): any {
+    return this.questionTests.pipe(
+      filter((qt: any) => qt.id === id)
+    );
   }
 }

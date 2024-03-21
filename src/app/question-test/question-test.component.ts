@@ -3,14 +3,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
-  computed,
   inject,
+  signal
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Answer } from '../core/models/answer.model';
 import { Question } from '../core/models/question.model';
 import { QuestionTestsService } from '../core/services/question-tests.service';
-import { Answer } from '../core/models/answer.model';
-import { core } from '@angular/compiler';
 
 @Component({
   selector: 'app-question-test',
@@ -20,10 +19,10 @@ import { core } from '@angular/compiler';
   styleUrl: './question-test.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class QuestionTestComponent {
+export class QuestionTestComponent implements OnInit {
   route = inject(ActivatedRoute);
   router = inject(Router);
-  questionTestService = inject(QuestionTestsService);
+  questionTestsService = inject(QuestionTestsService);
 
   checkAnswer = false;
   selectedQuestionIndex = 0;
@@ -33,28 +32,25 @@ export class QuestionTestComponent {
   score = 0;
   wrongQuestions: Question[] = [];
   showWrongQuestions = false;
-  questionTest = computed(() => {
-    const selectedQuestionTest = this.questionTestService.getQuestionTest(
-      this.route.snapshot.params.id
-    );
+  selectedQuestionTest: any;
+  stopLoading = signal(true);
 
-    if (selectedQuestionTest) {
-      this.score = !!sessionStorage.getItem('score')
-        ? parseInt(sessionStorage.getItem('score'))
-        : 0;
-      this.wrongQuestions = !!sessionStorage.getItem('wrongQuestions') ? JSON.parse(sessionStorage.getItem('wrongQuestions')) : [];
-      const questionIndexFromLocalStorage =
-        this.getSelectedQuestionIndexFromLocalStorage();
-      this.selectedQuestionIndex = !!questionIndexFromLocalStorage
-        ? questionIndexFromLocalStorage
-        : this.selectedQuestionIndex;
-      this.selectedQuestion =
-        selectedQuestionTest.questions[this.selectedQuestionIndex];
-      this.setSelectedQuestionIndexTolocalStorage();
-    }
+  ngOnInit(): void {
+    this.questionTestsService.questionTests.subscribe((data: any) => {
+      this.selectedQuestionTest = data.find(
+        (qt) => qt.id === this.route.snapshot.params.id
+      );
 
-    return selectedQuestionTest;
-  });
+      if (this.selectedQuestionTest) {
+        // Check if there are any previous data in the session storage
+        this.getDataFromLocalStorage();
+
+        this.selectedQuestion = this.selectedQuestionTest.questions[this.selectedQuestionIndex];
+        this.setSelectedQuestionIndexTolocalStorage();
+      }
+      this.stopLoading.set(false);
+    });
+  }
 
   onNextQuestion() {
     this.setScoreOfPreviousQuestion();
@@ -63,8 +59,9 @@ export class QuestionTestComponent {
     this.setSelectedQuestionIndexTolocalStorage();
 
     if (
-      this.selectedQuestionIndex === this.questionTest().questions.length - 1 ||
-      this.selectedQuestionIndex > this.questionTest().questions.length - 1
+      this.selectedQuestionIndex ===
+        this.selectedQuestionTest.questions.length ||
+      this.selectedQuestionIndex > this.selectedQuestionTest.questions.length
     ) {
       this.finishedTest = true;
       sessionStorage.removeItem('selectedQuestionIndex');
@@ -75,10 +72,6 @@ export class QuestionTestComponent {
 
     this.selectedAnswers = [];
     this.checkAnswer = false;
-  }
-
-  onCheckAnwser() {
-    this.checkAnswer = true;
   }
 
   onSelectAnswer(answer: Answer) {
@@ -96,17 +89,6 @@ export class QuestionTestComponent {
     }
   }
 
-  onClearTest() {
-    this.selectedAnswers = [];
-    this.selectedQuestionIndex = 0;
-    this.score = 0;
-    this.finishedTest = false;
-    this.setSelectedQuestionIndexTolocalStorage();
-    sessionStorage.removeItem('score');
-    sessionStorage.removeItem('selectedQuestionIndex');
-    sessionStorage.removeItem('wrongQuestions');
-  }
-
   answerIncludedToSelectedAnswers(answer: Answer): boolean {
     return !!this.selectedAnswers?.find(
       (selAnswer) => selAnswer.answer === answer.answer
@@ -118,16 +100,43 @@ export class QuestionTestComponent {
     window.location.reload();
   }
 
+  onRestartWrongQuestions() {
+    this.selectedQuestionTest.questions = sessionStorage.getItem(
+      'wrongQuestions'
+    )
+      ? JSON.parse(sessionStorage.getItem('wrongQuestions'))
+      : [];
+    this.onClearTest();
+    this.selectedQuestion = this.getSelectedQuestion();
+  }
+
+  onGoToIntro() {
+    this.onClearTest();
+    this.selectedQuestionTest = undefined;
+    this.router.navigate(['/']);
+  }
+
+  private onClearTest() {
+    this.selectedAnswers = [];
+    this.wrongQuestions = [];
+    this.score = 0;
+    this.finishedTest = false;
+    this.selectedQuestion = undefined;
+    this.selectedQuestionIndex = 0;
+    this.setSelectedQuestionIndexTolocalStorage();
+    this.showWrongQuestions = false;
+    this.checkAnswer = false;
+    sessionStorage.removeItem('score');
+    sessionStorage.removeItem('selectedQuestionIndex');
+    sessionStorage.removeItem('wrongQuestions');
+  }
+
   private setSelectedQuestionIndexTolocalStorage() {
     if (this.selectedQuestionIndex >= 0)
       sessionStorage.setItem(
         'selectedQuestionIndex',
         JSON.stringify(this.selectedQuestionIndex)
       );
-  }
-
-  private getSelectedQuestionIndexFromLocalStorage(): number {
-    return parseInt(sessionStorage.getItem('selectedQuestionIndex'));
   }
 
   private setScoreOfPreviousQuestion() {
@@ -145,11 +154,28 @@ export class QuestionTestComponent {
       sessionStorage.setItem('score', JSON.stringify(this.score));
     } else {
       this.wrongQuestions.push(previousQuestion);
-      sessionStorage.setItem('wrongQuestions', JSON.stringify(this.wrongQuestions));
+      sessionStorage.setItem(
+        'wrongQuestions',
+        JSON.stringify(this.wrongQuestions)
+      );
     }
   }
 
   private getSelectedQuestion(): Question {
-    return this.questionTest().questions[this.selectedQuestionIndex];
+    return this.selectedQuestionTest.questions[this.selectedQuestionIndex];
+  }
+
+  private getDataFromLocalStorage() {
+    const score = sessionStorage.getItem('score');
+    const wrongQuestions = sessionStorage.getItem('wrongQuestions');
+    const selectedQuestionIndex = sessionStorage.getItem(
+      'selectedQuestionIndex'
+    );
+
+    this.score = !!score ? parseInt(score) : 0;
+    this.wrongQuestions = !!wrongQuestions ? JSON.parse(wrongQuestions) : [];
+    this.selectedQuestionIndex = !!selectedQuestionIndex
+      ? parseInt(selectedQuestionIndex)
+      : this.selectedQuestionIndex;
   }
 }
