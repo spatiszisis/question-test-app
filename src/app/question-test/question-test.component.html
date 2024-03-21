@@ -121,7 +121,7 @@
           "
         >
           <details
-            class="group text-left mb-4"
+            class="group text-left mb-4 border-b-2 pb-3"
             [id]="'wrongQuestion' + wrongQuestionIndex"
           >
             <summary
@@ -148,8 +148,7 @@
               <ng-container *ngFor="let wrongQuestion of wrongQuestion.answers">
                 <span
                   [ngClass]="{
-                    '!text-green-300': wrongQuestion.isCorrect,
-                    '!text-red-400': !wrongQuestion.isCorrect
+                    '!text-green-500': wrongQuestion.isCorrect,
                   }"
                   class="font-bold mb-3"
                 >
