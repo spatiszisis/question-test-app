@@ -33,6 +33,15 @@
       @if (!finishedTest) {
       <h1 class="my-10">{{ selectedQuestion.question }}</h1>
 
+      <div class="flex items-center justify-center flex-col">
+        <img
+          class="w-[90%]"
+          *ngFor="let img of selectedQuestion.images"
+          [src]="'assets/' + img"
+          [alt]="img"
+        />
+      </div>
+
       <div class="flex flex-col items-center">
         @for(answer of selectedQuestion.answers; track selectedQuestion;) {
         <button
@@ -104,7 +113,10 @@
         <span *ngIf="score === selectedQuestionTest.questions.length">
           Congrats you answer corret all the questions!
         </span>
-        <span>Your score is {{ score }} / {{ selectedQuestionTest.questions.length }}</span>
+        <span
+          >Your score is {{ score }} /
+          {{ selectedQuestionTest.questions.length }}</span
+        >
       </h1>
       @if (wrongQuestions.length > 0) {
       <a

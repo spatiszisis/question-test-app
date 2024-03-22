@@ -5,6 +5,7 @@ import { Injectable, signal } from '@angular/core';
 })
 export class PopupService {
   showPopup = signal(false);
+  deletePopup = signal(false);
   popupContext = signal('');
 
 
@@ -14,5 +15,9 @@ export class PopupService {
 
   setPopupContext(value: string) {
     this.popupContext.set(value);
+  }
+
+  setDeletePopup(val: boolean) {
+    this.deletePopup.set(val);
   }
 }

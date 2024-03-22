@@ -45,7 +45,7 @@ export class AddQuestionTestComponent implements OnInit {
   questionTestForm: FormGroup;
   closeAccordion = true;
   importedFiled: any;
-  uploadedFiles: any[] = [];
+  uploadedFile: any;
   subscription: Subscription;
   existingQuestionTest: QuestionTest;
   loadingUpdateOrAdd = signal(false);
@@ -58,14 +58,7 @@ export class AddQuestionTestComponent implements OnInit {
         (qt) => qt.id === this.route.snapshot.params.id
       );
 
-      this.questionTestForm = this.formBuilder.group({
-        title: [
-          this.existingQuestionTest ? this.existingQuestionTest.title : '',
-        ],
-        questions: this.existingQuestionTest
-          ? this.setExistingQuestionTest()
-          : new FormArray([]),
-      });
+      this.buildForm();
 
       if (this.existingQuestionTest) {
         this.scrollToBottom();
@@ -105,7 +98,7 @@ export class AddQuestionTestComponent implements OnInit {
 
   onSubmit() {
     this.loadingUpdateOrAdd.set(true);
-    if (!this.questionTestForm.valid && this.uploadedFiles.length === 0) {
+    if (!this.questionTestForm.valid && !this.uploadedFile) {
       return;
     }
 
@@ -122,15 +115,13 @@ export class AddQuestionTestComponent implements OnInit {
       return;
     }
 
-    if (this.uploadedFiles.length > 0) {
-      this.uploadedFiles.forEach((file) => {
-        this.subscription = this.questionTestsService
-          .addQuestionTest(file)
-          .subscribe({
-            complete: () => this.onComplete(),
-            error: (err) => this.onError(err),
-          });
-      });
+    if (!!this.uploadedFile) {
+      this.subscription = this.questionTestsService
+        .addQuestionTest(this.uploadedFile)
+        .subscribe({
+          complete: () => this.onComplete(),
+          error: (err) => this.onError(err),
+        });
       return;
     }
 
@@ -153,7 +144,9 @@ export class AddQuestionTestComponent implements OnInit {
   }
 
   onFilesUploaded(file: any) {
-    this.uploadedFiles.push(file);
+    this.uploadedFile = file;
+    this.existingQuestionTest = file;
+    this.buildForm();
   }
 
   onDelete() {
@@ -176,6 +169,7 @@ export class AddQuestionTestComponent implements OnInit {
         ? 'The question test has been deleted'
         : 'The question test has been saved.'
     );
+    this.popupService.setDeletePopup(onDelete);
     this.router.navigate(['/intro']);
   }
 
@@ -226,5 +220,14 @@ export class AddQuestionTestComponent implements OnInit {
         wordsHeight.scrollTop = wordsHeight.scrollHeight;
       }
     }, 50);
+  }
+
+  private buildForm() {
+    this.questionTestForm = this.formBuilder.group({
+      title: [this.existingQuestionTest ? this.existingQuestionTest.title : ''],
+      questions: this.existingQuestionTest
+        ? this.setExistingQuestionTest()
+        : new FormArray([]),
+    });
   }
 }

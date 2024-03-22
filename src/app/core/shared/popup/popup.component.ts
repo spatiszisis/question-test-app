@@ -29,5 +29,6 @@ export class PopupComponent {
   onClose() {
     this.popupService.setShownPopup(false);
     this.popupService.setPopupContext('');
+    this.popupService.setDeletePopup(false);
   }
 }

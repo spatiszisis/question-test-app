@@ -34,8 +34,9 @@
       </h2>
     </div>
 
-    <div class="mt-5" *ngIf="!existingQuestionTest">
+    <div class="mt-5" *ngIf="!existingQuestionTest || uploadedFile">
       <app-upload-file
+        [uploadedFile]="uploadedFile"
         (filesUploaded)="onFilesUploaded($event)"
       ></app-upload-file>
 

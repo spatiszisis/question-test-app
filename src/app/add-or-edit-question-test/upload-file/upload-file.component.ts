@@ -4,6 +4,7 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
+  Input,
   Output,
   inject,
 } from '@angular/core';
@@ -19,6 +20,7 @@ import { UploadFileDirective } from '../../core/dropfile.directive';
 export class UploadFileComponent {
   ref = inject(ChangeDetectorRef);
   files: any[] = [];
+  @Input() uploadedFile: any;
   @Output() filesUploaded = new EventEmitter<any>();
 
   /**
@@ -41,28 +43,29 @@ export class UploadFileComponent {
    */
   deleteFile(index: number) {
     this.files.splice(index, 1);
+    this.filesUploaded.emit('');
   }
 
   /**
    * Simulate the upload process
    */
-  uploadFilesSimulator(index: number) {
-    setTimeout(() => {
-      if (index === this.files.length) {
-        return;
-      } else {
-        const progressInterval = setInterval(() => {
-          if (this.files[index].progress === 100) {
-            clearInterval(progressInterval);
-            this.uploadFilesSimulator(index + 1);
-          } else {
-            this.files[index].progress += 5;
-            this.ref.detectChanges();
-          }
-        }, 200);
-      }
-    }, 1000);
-  }
+  // uploadFilesSimulator(index: number) {
+  //   setTimeout(() => {
+  //     if (index === this.files.length) {
+  //       return;
+  //     } else {
+  //       const progressInterval = setInterval(() => {
+  //         if (this.files[index].progress === 100) {
+  //           clearInterval(progressInterval);
+  //           this.uploadFilesSimulator(index + 1);
+  //         } else {
+  //           this.files[index].progress += 5;
+  //           this.ref.detectChanges();
+  //         }
+  //       }, 200);
+  //     }
+  //   }, 1000);
+  // }
 
   /**
    * Convert Files list to normal array list
@@ -83,7 +86,7 @@ export class UploadFileComponent {
       console.log(error);
     };
 
-    this.uploadFilesSimulator(0);
+    // this.uploadFilesSimulator(0);
   }
 
   /**
