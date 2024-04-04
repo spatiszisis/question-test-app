@@ -46,7 +46,6 @@ export class QuestionTestComponent implements OnInit {
         this.getDataFromLocalStorage();
 
         this.selectedQuestion = this.selectedQuestionTest.questions[this.selectedQuestionIndex];
-        console.log(this.selectedQuestion);
         this.setSelectedQuestionIndexTolocalStorage();
       }
       this.stopLoading.set(false);
